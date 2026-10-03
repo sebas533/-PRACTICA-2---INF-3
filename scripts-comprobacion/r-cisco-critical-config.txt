@@ -1,0 +1,32 @@
+! R-CISCO-2168 - partes clave
+enable
+configure terminal
+!
+interface FastEthernet1/0
+ description WAN-HACIA-ISP-2168-T2
+ ip address 21.68.4.2 255.255.255.252
+ ip nat outside
+ no shutdown
+!
+interface FastEthernet1/1
+ description LAN-HACIA-WEB-SV-2168
+ ip address 10.21.68.129 255.255.255.240
+ ip nat inside
+ no shutdown
+!
+ip route 0.0.0.0 0.0.0.0 21.68.4.1
+!
+! PAT de la LAN del servidor, sin tocar el trafico que va al FortiGate (SSH por VPN)
+access-list 101 deny   ip 10.21.68.128 0.0.0.15 host 21.68.3.2
+access-list 101 permit ip 10.21.68.128 0.0.0.15 any
+ip nat inside source list 101 interface FastEthernet1/0 overload
+!
+! Publicacion del HTTPS
+ip nat inside source static tcp 10.21.68.130 443 interface FastEthernet1/0 443
+end
+write memory
+
+! Comprobacion
+! show ip nat translations
+! show ip route
+! show access-lists 101

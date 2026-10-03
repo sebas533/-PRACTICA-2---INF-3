@@ -1,0 +1,11 @@
+network:
+  version: 2
+  ethernets:
+    ens3:
+      addresses:
+        - 10.21.68.130/28
+      routes:
+        - to: default
+          via: 10.21.68.129
+      nameservers:
+        addresses: [8.8.8.8, 1.1.1.1]
