@@ -1,8 +1,8 @@
 # Práctica #2 — Infraestructura #3: HTTPS sin VPN y SSH solo por VPN IPsec
 
 **Asignatura:** Seguridad de Redes
-**Estudiante:** [Luis Roble]
-**Matrícula:** [2025-2168]
+**Estudiante:** [Nombre y apellido]
+**Matrícula:** [AAAA-2168]
 
 ---
 
@@ -46,7 +46,6 @@ flowchart LR
     VPNC -. "IPsec Remote Access / SSH" .-> FG
 ```
 
-![Topología final](img%20inf%203/01-topologia.png)
 
 ---
 
@@ -91,7 +90,7 @@ El FortiGate es el gateway de los usuarios: la interfaz `VLAN10-USERS` cuelga de
 
 En el switch, `Gi0/0` va como trunk 802.1Q (solo VLAN 10) hacia el FortiGate y `Gi0/1` como acceso VLAN 10 hacia el PC.
 
-![Switch VLAN 10 y trunk](img%20inf%203/02-switch-vlan10-trunk.png)
+![Switch VLAN 10 y trunk](img%20inf%203/vlan%20brief%20y%20trunks.png)
 
 ### 5.2 FortiGate
 
@@ -104,7 +103,9 @@ Interfaces usadas:
 
 Ruta por defecto: `0.0.0.0/0` por `21.68.3.1` (port1).
 
-![Interfaces del FortiGate](img%20inf%203/03-fortigate-interfaces.png)
+![Interfaces del FortiGate](img%20inf%203/Interfaces.png)
+
+![Ruta por defecto del FortiGate](img%20inf%203/Ruta%20wan%20static.png)
 
 ### 5.3 Políticas de firewall
 
@@ -116,7 +117,7 @@ Ruta por defecto: `0.0.0.0/0` por `21.68.3.1` (port1).
 
 El orden importa: la política 3 está por encima de la 1, así el SSH de los usuarios hacia el servidor se corta antes de que la regla general de salida lo deje pasar.
 
-![Políticas de firewall](img%20inf%203/04-fortigate-politicas.png)
+![Políticas de firewall](img%20inf%203/Politicas.png)
 
 ### 5.4 R-CISCO-2168 y publicación del HTTPS
 
@@ -141,7 +142,9 @@ access-list 101 deny   ip 10.21.68.128 0.0.0.15 host 21.68.3.2
 access-list 101 permit ip 10.21.68.128 0.0.0.15 any
 ```
 
-![NAT estático HTTPS](img%20inf%203/05-cisco-nat-https.png)
+![NAT estático HTTPS](img%20inf%203/nat.png)
+
+![NAT y ACL 101](img%20inf%203/nat%20y%20acces%20list.png)
 
 ### 5.5 ISP
 
@@ -151,7 +154,7 @@ El ISP hace PAT hacia Internet para las dos redes WAN (ACL 1) y tiene una ruta e
 ip route 10.21.68.128 255.255.255.240 21.68.4.2
 ```
 
-![Ruta del ISP hacia el servidor](img%20inf%203/06-isp-ruta-web.png)
+![Ruta del ISP hacia el servidor](img%20inf%203/el%20isp%20conoce%20la%20red%20del%20sv%20por%20.png)
 
 ### 5.6 VPN IPsec Remote Access
 
@@ -170,9 +173,9 @@ El túnel `VPN-REMOTE-2168` termina en `port3` del FortiGate. Autenticación con
 - Propuestas `des-md5` y `des-sha1`
 - Resto de parámetros (PFS, lifetime) con los valores por defecto de FortiOS 7.0
 
-![IPsec fase 1](img%20inf%203/07-fortigate-ipsec-fase1.png)
+![IPsec fase 1](img%20inf%203/tunnels.png)
 
-![IPsec fase 2](img%20inf%203/08-fortigate-ipsec-fase2.png)
+![IPsec fase 2](img%20inf%203/tunnelss.png)
 
 > IKEv1 en modo agresivo, DES y SHA1 están aquí solo por compatibilidad con el laboratorio. No son parámetros para un despliegue real.
 
@@ -182,15 +185,18 @@ El túnel `VPN-REMOTE-2168` termina en `port3` del FortiGate. Autenticación con
 
 Al levantar el túnel el cliente recibe una IP del pool y strongSwan instala una ruta específica hacia `10.21.68.130`.
 
-![strongSwan establecido](img%20inf%203/09-strongswan-establecido.png)
+![Cliente strongSwan](img%20inf%203/cliente%20strong%20swan.png)
 
-![Ruta instalada por la VPN](img%20inf%203/10-ruta-por-vpn.png)
+![Activación del túnel desde VPN-REMOTE](img%20inf%203/ACTIVAR%20EL%20TUNEL%20DESDE%20VPN%20REMOTE.png)
+
+![Túnel arriba en el cliente](img%20inf%203/SUBE%20EL%20TUNEL.png)
+
+![IP virtual asignada al cliente](img%20inf%203/ip%20del%20cliente%20asignada.png)
 
 ### 5.8 Servidor
 
 `WEB-SV-2168`: IP `10.21.68.130/28`, gateway `10.21.68.129`, Apache2 en TCP/443 y OpenSSH en TCP/22.
 
-![Puertos 22 y 443 en el servidor](img%20inf%203/11-servidor-puertos.png)
 
 ---
 
@@ -206,7 +212,7 @@ curl -k -I https://21.68.4.2
 
 Debe responder `HTTP/1.1 200 OK` con el banner de Apache.
 
-![HTTPS sin VPN](img%20inf%203/12-https-sin-vpn.png)
+![HTTPS sin VPN](img%20inf%203/curl%20ready.png)
 
 ### 6.2 SSH directo bloqueado
 
@@ -218,7 +224,7 @@ ssh -o ConnectTimeout=5 usuario@10.21.68.130
 
 Resultado esperado: `Connection timed out`.
 
-![SSH directo bloqueado](img%20inf%203/13-ssh-bloqueado.png)
+![SSH directo bloqueado](img%20inf%203/ssh.png)
 
 ### 6.3 SSH con la VPN arriba
 
@@ -227,7 +233,7 @@ sudo ipsec up VPN-REMOTE-2168
 ssh usuario@10.21.68.130
 ```
 
-![SSH exitoso por VPN](img%20inf%203/14-ssh-con-vpn.png)
+![SSH exitoso por VPN](img%20inf%203/ssh%20video.png)
 
 ### 6.4 SSH con la VPN abajo
 
@@ -238,7 +244,6 @@ ssh usuario@10.21.68.130
 
 Sin túnel no hay ruta ni acceso al servidor.
 
-![SSH sin VPN](img%20inf%203/15-ssh-sin-vpn.png)
 
 La tabla completa de pruebas está en [`docs/validacion.md`](docs/validacion.md).
 
